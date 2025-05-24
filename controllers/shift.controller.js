@@ -21,6 +21,16 @@ exports.createShift = async (req, res) => {
   }
 };
 
+exports.getShifts = async (req, res) => {
+  try {
+    const [rows] = await db.query("SELECT * FROM tb_shifts ");
+
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 exports.assignShift = async (req, res) => {
   const { user_id, shift_id } = req.body;
   try {
@@ -62,7 +72,7 @@ exports.getMySchedule = async (req, res) => {
   const nurseId = req.user.user_id;
   try {
     const [rows] = await db.query(
-      `SELECT s.date, s.start_time, s.end_time
+      `SELECT sa.shift_assignment_id, s.date, s.start_time, s.end_time
             FROM tb_shifts s
             JOIN tb_shift_assignments sa ON s.shift_id = sa.shift_id
             WHERE sa.user_id = ?`,

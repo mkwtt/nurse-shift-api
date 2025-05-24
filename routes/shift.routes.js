@@ -9,12 +9,21 @@ router.post(
   checkRole(["head_nurse"]),
   shiftController.createShift
 );
+
+router.get(
+  "/shifts",
+  verifyToken,
+  checkRole(["head_nurse"]),
+  shiftController.getShifts
+);
+
 router.post(
   "/shifts-assignments",
   verifyToken,
   checkRole(["head_nurse"]),
   shiftController.assignShift
 );
+
 router.get(
   "/my-schedule",
   verifyToken,
