@@ -35,6 +35,27 @@ exports.createLeaveRequest = async (req, res) => {
   }
 };
 
+exports.getMyLeaveRequest = async (req, res) => {
+  const userId = req.user.user_id;
+
+  try {
+    const [rows] = await db.query(
+      `
+      SELECT lr.leave_request_id, lr.shift_assignment_id, lr.reason, lr.status, u.name AS approved_by 
+      FROM tb_leave_requests lr
+      JOIN tb_shift_assignments sa ON lr.shift_assignment_id = sa.shift_assignment_id
+      LEFT JOIN tb_users u ON lr.approved_by = u.user_id
+      WHERE sa.user_id = ?
+      `,
+      [userId]
+    );
+
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 exports.getLeaveRequests = async (req, res) => {
   try {
     const [rows] = await db.query(`

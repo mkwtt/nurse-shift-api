@@ -25,6 +25,13 @@ router.post(
 );
 
 router.get(
+  "/shifts-assignments",
+  verifyToken,
+  checkRole(["head_nurse"]),
+  shiftController.getShiftAssignments
+);
+
+router.get(
   "/my-schedule",
   verifyToken,
   checkRole(["nurse"]),

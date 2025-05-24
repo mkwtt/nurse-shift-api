@@ -11,6 +11,13 @@ router.post(
 );
 
 router.get(
+  "/my-leave-requests",
+  verifyToken,
+  checkRole(["nurse"]),
+  leaveController.getMyLeaveRequest
+)
+
+router.get(
   "/leave-requests",
   verifyToken,
   checkRole(["head_nurse"]),

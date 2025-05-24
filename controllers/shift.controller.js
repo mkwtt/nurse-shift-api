@@ -68,6 +68,21 @@ exports.assignShift = async (req, res) => {
   }
 };
 
+exports.getShiftAssignments = async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT sa.shift_assignment_id, sa.shift_id, sa.user_id, u.name, s.date, s.start_time, s.end_time
+      FROM tb_shift_assignments sa
+      JOIN tb_users u ON sa.user_id = u.user_id
+      JOIN tb_shifts s ON sa.shift_id = s.shift_id`
+    );
+
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 exports.getMySchedule = async (req, res) => {
   const nurseId = req.user.user_id;
   try {
