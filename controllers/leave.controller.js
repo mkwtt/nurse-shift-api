@@ -41,11 +41,13 @@ exports.getMyLeaveRequest = async (req, res) => {
   try {
     const [rows] = await db.query(
       `
-      SELECT lr.leave_request_id, lr.shift_assignment_id, lr.reason, lr.status, u.name AS approved_by 
+      SELECT lr.leave_request_id, lr.shift_assignment_id, s.date, s.start_time, s.end_time, lr.reason, lr.status, u.name AS approved_by 
       FROM tb_leave_requests lr
       JOIN tb_shift_assignments sa ON lr.shift_assignment_id = sa.shift_assignment_id
+      JOIN tb_shifts s ON sa.shift_id = s.shift_id
       LEFT JOIN tb_users u ON lr.approved_by = u.user_id
       WHERE sa.user_id = ?
+      ORDER BY s.date DESC
       `,
       [userId]
     );
@@ -59,12 +61,20 @@ exports.getMyLeaveRequest = async (req, res) => {
 exports.getLeaveRequests = async (req, res) => {
   try {
     const [rows] = await db.query(`
-      SELECT lr.leave_request_id, sa.shift_assignment_id, u.name, s.date, s.start_time, s.end_time, lr.reason, lr.status
+      SELECT lr.leave_request_id, sa.shift_assignment_id, u.name AS requester_name, s.date, s.start_time, s.end_time, lr.reason, lr.status, approver.name AS approved_by
             FROM tb_leave_requests lr
             JOIN tb_shift_assignments sa ON lr.shift_assignment_id = sa.shift_assignment_id
             JOIN tb_users u ON sa.user_id = u.user_id
             JOIN tb_shifts s ON sa.shift_id = s.shift_id
-            ORDER BY s.date ASC
+            LEFT JOIN tb_users approver ON lr.approved_by = approver.user_id
+            ORDER BY 
+            CASE 
+            WHEN lr.status = 'pending' THEN 0
+            WHEN lr.status = 'approved' THEN 1
+            WHEN lr.status = 'rejected' THEN 2
+            ELSE 3
+            END, 
+            s.date ASC
     `);
 
     res.json(rows);

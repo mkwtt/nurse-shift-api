@@ -23,7 +23,9 @@ exports.createShift = async (req, res) => {
 
 exports.getShifts = async (req, res) => {
   try {
-    const [rows] = await db.query("SELECT * FROM tb_shifts ");
+    const [rows] = await db.query(
+      "SELECT * FROM tb_shifts ORDER BY date DESC "
+    );
 
     res.json(rows);
   } catch (err) {
@@ -74,7 +76,9 @@ exports.getShiftAssignments = async (req, res) => {
       `SELECT sa.shift_assignment_id, sa.shift_id, sa.user_id, u.name, s.date, s.start_time, s.end_time
       FROM tb_shift_assignments sa
       JOIN tb_users u ON sa.user_id = u.user_id
-      JOIN tb_shifts s ON sa.shift_id = s.shift_id`
+      JOIN tb_shifts s ON sa.shift_id = s.shift_id
+      ORDER BY s.date DESC
+      `
     );
 
     res.json(rows);
@@ -87,10 +91,20 @@ exports.getMySchedule = async (req, res) => {
   const nurseId = req.user.user_id;
   try {
     const [rows] = await db.query(
-      `SELECT sa.shift_assignment_id, s.date, s.start_time, s.end_time
-            FROM tb_shifts s
-            JOIN tb_shift_assignments sa ON s.shift_id = sa.shift_id
-            WHERE sa.user_id = ?`,
+      `SELECT 
+        sa.shift_assignment_id, 
+        s.date, 
+        s.start_time, 
+        s.end_time, 
+        EXISTS (
+          SELECT 1 FROM tb_leave_requests lr
+          WHERE lr.shift_assignment_id = sa.shift_assignment_id
+        ) AS leave_requested
+      FROM tb_shift_assignments sa
+      JOIN tb_shifts s ON sa.shift_id = s.shift_id
+      WHERE sa.user_id = ?
+      ORDER BY s.date DESC
+      `,
       [nurseId]
     );
     res.json(rows);

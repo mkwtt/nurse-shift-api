@@ -10,4 +10,11 @@ router.get(
   userController.getUsers
 );
 
+router.get(
+  "/nurses",
+  verifyToken,
+  checkRole(["head_nurse"]),
+  userController.getNurses
+);
+
 module.exports = router;
